@@ -1,0 +1,437 @@
+import React, { useState, useEffect } from 'react';
+import { PlusCircle, TrendingUp, Calendar, DollarSign, Trash2, Search, TrendingDown, UtensilsCrossed, Car, Wifi, CreditCard, ShoppingBag, FileText, Film, Heart, Package, Briefcase, Code, Building2, Gift, Wallet, BarChart3 } from 'lucide-react';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+
+export default function ExpenseTracker() {
+  const [expenses, setExpenses] = useState([]);
+  const [income, setIncome] = useState([]);
+  const [activeTab, setActiveTab] = useState('expense');
+  const [amount, setAmount] = useState('');
+  const [category, setCategory] = useState('');
+  const [description, setDescription] = useState('');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const expenseCategories = [
+    { name: 'Food', icon: UtensilsCrossed, color: 'bg-orange-500' },
+    { name: 'Transportation', icon: Car, color: 'bg-blue-500' },
+    { name: 'Internet', icon: Wifi, color: 'bg-purple-500' },
+    { name: 'Credit Card', icon: CreditCard, color: 'bg-pink-500' },
+    { name: 'Shopping', icon: ShoppingBag, color: 'bg-green-500' },
+    { name: 'Bills', icon: FileText, color: 'bg-red-500' },
+    { name: 'Entertainment', icon: Film, color: 'bg-indigo-500' },
+    { name: 'Healthcare', icon: Heart, color: 'bg-rose-500' },
+    { name: 'Other', icon: Package, color: 'bg-gray-500' }
+  ];
+
+  const incomeCategories = [
+    { name: 'Salary', icon: Briefcase, color: 'bg-emerald-500' },
+    { name: 'Freelance', icon: Code, color: 'bg-cyan-500' },
+    { name: 'Business', icon: Building2, color: 'bg-teal-500' },
+    { name: 'Investment', icon: BarChart3, color: 'bg-green-500' },
+    { name: 'Gift', icon: Gift, color: 'bg-pink-500' },
+    { name: 'Other', icon: Wallet, color: 'bg-gray-500' }
+  ];
+
+  const getCategoryInfo = (categoryName) => {
+    const categories = activeTab === 'expense' ? expenseCategories : incomeCategories;
+    return categories.find(c => c.name === categoryName) || { icon: Package, color: 'bg-gray-500' };
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    saveData();
+  }, [expenses, income]);
+
+  const loadData = () => {
+    const savedExpenses = localStorage.getItem('expenses');
+    const savedIncome = localStorage.getItem('income');
+    if (savedExpenses) setExpenses(JSON.parse(savedExpenses));
+    if (savedIncome) setIncome(JSON.parse(savedIncome));
+  };
+
+  const saveData = () => {
+    localStorage.setItem('expenses', JSON.stringify(expenses));
+    localStorage.setItem('income', JSON.stringify(income));
+  };
+
+  const addTransaction = () => {
+    if (!amount || !category || !date) return;
+    
+    const newTransaction = {
+      id: Date.now(),
+      amount: parseFloat(amount),
+      category,
+      description,
+      date
+    };
+    
+    if (activeTab === 'expense') {
+      setExpenses([...expenses, newTransaction]);
+    } else {
+      setIncome([...income, newTransaction]);
+    }
+    
+    setAmount('');
+    setCategory('');
+    setDescription('');
+  };
+
+  const deleteTransaction = (id, type) => {
+    if (type === 'expense') {
+      setExpenses(expenses.filter(e => e.id !== id));
+    } else {
+      setIncome(income.filter(i => i.id !== id));
+    }
+  };
+
+  const getMonthlyData = () => {
+    const monthlyTotals = {};
+    
+    expenses.forEach(expense => {
+      const month = expense.date.slice(0, 7);
+      if (!monthlyTotals[month]) {
+        monthlyTotals[month] = { expense: 0, income: 0 };
+      }
+      monthlyTotals[month].expense += expense.amount;
+    });
+
+    income.forEach(inc => {
+      const month = inc.date.slice(0, 7);
+      if (!monthlyTotals[month]) {
+        monthlyTotals[month] = { expense: 0, income: 0 };
+      }
+      monthlyTotals[month].income += inc.amount;
+    });
+
+    return Object.keys(monthlyTotals)
+      .sort()
+      .slice(-6)
+      .map(month => ({
+        month,
+        expense: monthlyTotals[month].expense.toFixed(2),
+        income: monthlyTotals[month].income.toFixed(2),
+        savings: (monthlyTotals[month].income - monthlyTotals[month].expense).toFixed(2)
+      }));
+  };
+
+  const getDailyData = () => {
+    const monthExpenses = expenses.filter(e => e.date.startsWith(selectedMonth));
+    const dailyTotals = {};
+
+    monthExpenses.forEach(expense => {
+      const day = expense.date.split('-')[2];
+      if (!dailyTotals[day]) {
+        dailyTotals[day] = 0;
+      }
+      dailyTotals[day] += expense.amount;
+    });
+
+    return Object.keys(dailyTotals)
+      .sort((a, b) => parseInt(a) - parseInt(b))
+      .map(day => ({
+        day: `Day ${day}`,
+        amount: dailyTotals[day].toFixed(2)
+      }));
+  };
+
+  const getCurrentMonthTotal = (type) => {
+    const data = type === 'expense' ? expenses : income;
+    return data
+      .filter(e => e.date.startsWith(selectedMonth))
+      .reduce((sum, e) => sum + e.amount, 0)
+      .toFixed(2);
+  };
+
+  const getFilteredTransactions = () => {
+    const data = activeTab === 'expense' ? expenses : income;
+    return data
+      .filter(t => t.date.startsWith(selectedMonth))
+      .filter(t => {
+        if (!searchQuery) return true;
+        const query = searchQuery.toLowerCase();
+        return (
+          t.category.toLowerCase().includes(query) ||
+          t.description.toLowerCase().includes(query) ||
+          t.amount.toString().includes(query) ||
+          t.date.includes(query)
+        );
+      })
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
+  };
+
+  const currentExpense = getCurrentMonthTotal('expense');
+  const currentIncome = getCurrentMonthTotal('income');
+  const savings = (parseFloat(currentIncome) - parseFloat(currentExpense)).toFixed(2);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header Card */}
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl shadow-2xl p-8 mb-6 text-white">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="bg-white/20 backdrop-blur-lg p-3 rounded-2xl">
+              <DollarSign className="w-10 h-10" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold">Money Tracker</h1>
+              <p className="text-indigo-100 mt-1">Manage your finances with ease</p>
+            </div>
+          </div>
+
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20">
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingDown className="w-5 h-5" />
+                <span className="text-sm font-medium">Total Expense</span>
+              </div>
+              <p className="text-3xl font-bold">₹{currentExpense}</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20">
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp className="w-5 h-5" />
+                <span className="text-sm font-medium">Total Income</span>
+              </div>
+              <p className="text-3xl font-bold">₹{currentIncome}</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20">
+              <div className="flex items-center gap-2 mb-2">
+                <Wallet className="w-5 h-5" />
+                <span className="text-sm font-medium">Savings</span>
+              </div>
+              <p className={`text-3xl font-bold ${parseFloat(savings) >= 0 ? 'text-green-200' : 'text-red-200'}`}>
+                ₹{savings}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Input Card */}
+        <div className="bg-white rounded-3xl shadow-xl p-6 mb-6">
+          {/* Tab Selector */}
+          <div className="flex gap-3 mb-6">
+            <button
+              onClick={() => {
+                setActiveTab('expense');
+                setCategory('');
+              }}
+              className={`flex-1 py-4 px-6 rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
+                activeTab === 'expense'
+                  ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg scale-105'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <TrendingDown className="w-5 h-5" />
+              Expense
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('income');
+                setCategory('');
+              }}
+              className={`flex-1 py-4 px-6 rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
+                activeTab === 'income'
+                  ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg scale-105'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <TrendingUp className="w-5 h-5" />
+              Income
+            </button>
+          </div>
+
+          {/* Add Transaction Form */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+            <input
+              type="number"
+              placeholder="Amount (₹)"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+            />
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+            >
+              <option value="">Select Category</option>
+              {(activeTab === 'expense' ? expenseCategories : incomeCategories).map(cat => (
+                <option key={cat.name} value={cat.name}>{cat.name}</option>
+              ))}
+            </select>
+            <input
+              type="text"
+              placeholder="Description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+            />
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+            />
+            <button
+              onClick={addTransaction}
+              className={`${
+                activeTab === 'expense' 
+                  ? 'bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600' 
+                  : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'
+              } text-white px-6 py-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 font-semibold shadow-lg hover:shadow-xl`}
+            >
+              <PlusCircle className="w-5 h-5" />
+              Add
+            </button>
+          </div>
+
+          {/* Month Selector */}
+          <div className="flex items-center gap-3">
+            <Calendar className="w-5 h-5 text-indigo-600" />
+            <input
+              type="month"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="px-4 py-2 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+            />
+          </div>
+        </div>
+
+        {/* Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          {/* Monthly Comparison Chart */}
+          <div className="bg-white rounded-3xl shadow-xl p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-2 rounded-xl">
+                <TrendingUp className="w-6 h-6 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800">Monthly Trends</h2>
+            </div>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={getMonthlyData()}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="month" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip 
+                  formatter={(value) => `₹${value}`}
+                  contentStyle={{ borderRadius: '12px', border: '2px solid #e5e7eb' }}
+                />
+                <Legend />
+                <Line type="monotone" dataKey="income" stroke="#10b981" strokeWidth={3} name="Income" dot={{ r: 5 }} />
+                <Line type="monotone" dataKey="expense" stroke="#ef4444" strokeWidth={3} name="Expense" dot={{ r: 5 }} />
+                <Line type="monotone" dataKey="savings" stroke="#3b82f6" strokeWidth={3} name="Savings" dot={{ r: 5 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Daily Expenses Chart */}
+          <div className="bg-white rounded-3xl shadow-xl p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-gradient-to-r from-red-500 to-pink-500 p-2 rounded-xl">
+                <TrendingDown className="w-6 h-6 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800">Daily Expenses</h2>
+            </div>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={getDailyData()}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="day" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip 
+                  formatter={(value) => `₹${value}`}
+                  contentStyle={{ borderRadius: '12px', border: '2px solid #e5e7eb' }}
+                />
+                <Legend />
+                <Bar dataKey="amount" fill="url(#colorGradient)" name="Amount (₹)" radius={[8, 8, 0, 0]} />
+                <defs>
+                  <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#ef4444" />
+                    <stop offset="100%" stopColor="#ec4899" />
+                  </linearGradient>
+                </defs>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Transactions List */}
+        <div className="bg-white rounded-3xl shadow-xl p-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-3">
+              <div className={`${activeTab === 'expense' ? 'bg-gradient-to-r from-red-500 to-pink-500' : 'bg-gradient-to-r from-green-500 to-emerald-500'} p-2 rounded-xl`}>
+                {activeTab === 'expense' ? <TrendingDown className="w-6 h-6 text-white" /> : <TrendingUp className="w-6 h-6 text-white" />}
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800">
+                Recent {activeTab === 'expense' ? 'Expenses' : 'Income'}
+              </h2>
+            </div>
+            <div className="relative">
+              <Search className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 transform -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Search transactions..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-full md:w-80 transition"
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            {getFilteredTransactions().length === 0 ? (
+              <div className="text-center py-16">
+                <div className="bg-gray-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Package className="w-10 h-10 text-gray-400" />
+                </div>
+                <p className="text-gray-500 text-lg">
+                  {searchQuery ? 'No transactions found matching your search' : `No ${activeTab} recorded for this month`}
+                </p>
+              </div>
+            ) : (
+              getFilteredTransactions().map(transaction => {
+                const categoryInfo = getCategoryInfo(transaction.category);
+                const Icon = categoryInfo.icon;
+                return (
+                  <div key={transaction.id} className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl hover:shadow-md transition-all duration-300 border-2 border-transparent hover:border-indigo-200">
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className={`${categoryInfo.color} p-3 rounded-xl text-white`}>
+                        <Icon className="w-6 h-6" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-1">
+                          <span className={`text-xl font-bold ${activeTab === 'expense' ? 'text-red-600' : 'text-green-600'}`}>
+                            ₹{transaction.amount.toFixed(2)}
+                          </span>
+                          <span className={`px-3 py-1 ${
+                            activeTab === 'expense' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+                          } rounded-full text-sm font-semibold`}>
+                            {transaction.category}
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {transaction.description && <span className="font-medium">{transaction.description} • </span>}
+                          <span>{new Date(transaction.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => deleteTransaction(transaction.id, activeTab)}
+                      className="text-red-500 hover:text-red-700 p-3 hover:bg-red-50 rounded-xl transition-all duration-300"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
