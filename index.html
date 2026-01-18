@@ -374,97 +374,207 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header-card">
-            <div class="header-title">
-                <div class="header-icon">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="12" y1="1" x2="12" y2="23"></line>
-                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                    </svg>
-                </div>
-                <div>
-                    <h1>Money Tracker</h1>
-                    <p>Manage your finances with ease</p>
-                </div>
-            </div>
-            <div class="summary-grid">
-                <div class="summary-card">
-                    <h3>Total Expense</h3>
-                    <p id="totalExpense">₹0.00</p>
-                </div>
-                <div class="summary-card">
-                    <h3>Total Income</h3>
-                    <p id="totalIncome">₹0.00</p>
-                </div>
-                <div class="summary-card">
-                    <h3>Savings</h3>
-                    <p id="totalSavings">₹0.00</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="tabs">
-                <button class="tab-btn expense" id="expenseTab" onclick="switchTab('expense')">
-                    <span>📉</span> Expense
-                </button>
-                <button class="tab-btn inactive" id="incomeTab" onclick="switchTab('income')">
-                    <span>📈</span> Income
-                </button>
-            </div>
-
-            <div class="form-grid">
-                <input type="number" id="amount" placeholder="Amount (₹)" step="0.01">
-                <select id="category">
-                    <option value="">Select Category</option>
-                </select>
-                <input type="text" id="description" placeholder="Description">
-                <input type="date" id="date">
-                <button class="add-btn" onclick="addTransaction()">
-                    <span>➕</span> Add
-                </button>
-            </div>
-
-            <div class="month-selector">
-                <span>📅</span>
-                <input type="month" id="selectedMonth">
-            </div>
-        </div>
-
-        <div class="charts-grid">
-            <div class="chart-container">
-                <div class="chart-header">
-                    <div class="chart-icon">📊</div>
-                    <h2>Monthly Trends</h2>
-                </div>
-                <canvas id="monthlyChart" width="400" height="300"></canvas>
-            </div>
-
-            <div class="chart-container">
-                <div class="chart-header">
-                    <div class="chart-icon">📉</div>
-                    <h2>Daily Expenses</h2>
-                </div>
-                <canvas id="dailyChart" width="400" height="300"></canvas>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="chart-header">
-                <div class="chart-icon">📝</div>
-                <h2 id="transactionTitle">Recent Expenses</h2>
-            </div>
-            
-            <div class="search-box">
-                <span class="search-icon">🔍</span>
-                <input type="text" id="searchQuery" placeholder="Search transactions..." oninput="renderTransactions()">
-            </div>
-
-            <div class="transaction-list" id="transactionList"></div>
-        </div>
-    </div>
-
+    <main class="flex-1 overflow-y-auto pb-24 no-scrollbar relative">
+<!-- Header -->
+<div class="flex items-center p-4 pt-6 justify-between sticky top-0 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md z-10">
+<div class="flex items-center gap-3">
+<div class="relative">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-10 border-2 border-primary" data-alt="User profile picture of Alex" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDPouQp-UkzVU_JmVXwY3vAsLkSrGdZJvFF_PwvbtgjMrvon8_AU4v0eZZZ7ZL5il8nDOoTl3mucA7RXIr9d2xa1zpGHdkNE0zRbGn5Kn5pFc-121zrNAfBxhEmAIUuD38NgVhT6xJSGKBHpo2C-ByUDPyjcIftVtnuXqn-Cp9_qv6bGnNAk5IFQ-NKs_mQcQcYpcTNkT6Nnem5aRVWfei_DK4P9DZenzbelxboXTuQP784R2ejQLlPSp8sMifC5U42tY38UGCZhy2m");'></div>
+<div class="absolute bottom-0 right-0 size-3 bg-primary rounded-full border-2 border-background-dark"></div>
+</div>
+<div class="flex flex-col">
+<p class="text-xs font-medium text-gray-500 dark:text-gray-400 leading-none mb-1">Welcome back,</p>
+<h2 class="text-gray-900 dark:text-white text-lg font-bold leading-none tracking-tight">Alex Morgan</h2>
+</div>
+</div>
+<button class="flex items-center justify-center rounded-full size-10 bg-surface-dark/50 text-white hover:bg-surface-dark transition-colors relative">
+<span class="material-symbols-outlined" style="font-size: 24px;">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border border-surface-dark"></span>
+</button>
+</div>
+<!-- Total Balance & Budget Card -->
+<div class="px-4 mt-2">
+<div class="flex flex-col gap-6 rounded-2xl p-6 bg-surface-dark border border-white/5 relative overflow-hidden group">
+<!-- Abstract Decoration -->
+<div class="absolute -right-10 -top-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-500"></div>
+<div class="relative z-10">
+<p class="text-gray-400 text-sm font-medium leading-normal mb-1">Total Balance</p>
+<div class="flex items-baseline gap-2">
+<p class="text-white tracking-tight text-4xl font-bold leading-tight">$12,450.00</p>
+<span class="text-primary bg-primary/10 px-2 py-0.5 rounded-full text-xs font-bold">+2.4%</span>
+</div>
+</div>
+<!-- Budget Progress -->
+<div class="flex flex-col gap-2 relative z-10">
+<div class="flex justify-between items-end">
+<p class="text-white text-sm font-medium leading-normal">Monthly Budget</p>
+<p class="text-gray-400 text-xs font-normal leading-normal"><span class="text-white font-bold">$2,250</span> / $3,000</p>
+</div>
+<div class="h-3 rounded-full bg-black/40 overflow-hidden">
+<div class="h-full rounded-full bg-primary" style="width: 75%;"></div>
+</div>
+<p class="text-gray-400 text-xs font-normal mt-1">75% of budget used</p>
+</div>
+</div>
+</div>
+<!-- Categories Carousel -->
+<div class="mt-8">
+<div class="flex justify-between items-center px-4 mb-4">
+<h3 class="text-white tracking-tight text-lg font-bold leading-tight">Spending by Category</h3>
+<button class="text-primary text-sm font-bold">See All</button>
+</div>
+<div class="flex overflow-x-auto no-scrollbar pb-2 px-4 gap-3 snap-x">
+<!-- Category Item: Food -->
+<div class="snap-start shrink-0 flex flex-col gap-3 rounded-2xl p-4 bg-surface-dark border border-white/5 min-w-[140px] hover:bg-white/5 transition-colors cursor-pointer">
+<div class="size-10 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center">
+<span class="material-symbols-outlined">restaurant</span>
+</div>
+<div>
+<p class="text-white text-base font-bold leading-normal">Food</p>
+<p class="text-gray-400 text-sm font-medium">$450.00</p>
+</div>
+<div class="h-1 w-full bg-white/10 rounded-full mt-1">
+<div class="h-full bg-orange-400 rounded-full" style="width: 45%"></div>
+</div>
+</div>
+<!-- Category Item: Transport -->
+<div class="snap-start shrink-0 flex flex-col gap-3 rounded-2xl p-4 bg-surface-dark border border-white/5 min-w-[140px] hover:bg-white/5 transition-colors cursor-pointer">
+<div class="size-10 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center">
+<span class="material-symbols-outlined">directions_car</span>
+</div>
+<div>
+<p class="text-white text-base font-bold leading-normal">Transport</p>
+<p class="text-gray-400 text-sm font-medium">$120.00</p>
+</div>
+<div class="h-1 w-full bg-white/10 rounded-full mt-1">
+<div class="h-full bg-blue-400 rounded-full" style="width: 30%"></div>
+</div>
+</div>
+<!-- Category Item: Shopping -->
+<div class="snap-start shrink-0 flex flex-col gap-3 rounded-2xl p-4 bg-surface-dark border border-white/5 min-w-[140px] hover:bg-white/5 transition-colors cursor-pointer">
+<div class="size-10 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center">
+<span class="material-symbols-outlined">shopping_bag</span>
+</div>
+<div>
+<p class="text-white text-base font-bold leading-normal">Shopping</p>
+<p class="text-gray-400 text-sm font-medium">$300.00</p>
+</div>
+<div class="h-1 w-full bg-white/10 rounded-full mt-1">
+<div class="h-full bg-purple-400 rounded-full" style="width: 60%"></div>
+</div>
+</div>
+<!-- Category Item: Health -->
+<div class="snap-start shrink-0 flex flex-col gap-3 rounded-2xl p-4 bg-surface-dark border border-white/5 min-w-[140px] hover:bg-white/5 transition-colors cursor-pointer">
+<div class="size-10 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center">
+<span class="material-symbols-outlined">cardiology</span>
+</div>
+<div>
+<p class="text-white text-base font-bold leading-normal">Health</p>
+<p class="text-gray-400 text-sm font-medium">$85.00</p>
+</div>
+<div class="h-1 w-full bg-white/10 rounded-full mt-1">
+<div class="h-full bg-red-400 rounded-full" style="width: 15%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Recent Transactions -->
+<div class="mt-8 px-4">
+<h3 class="text-white tracking-tight text-lg font-bold leading-tight mb-4">Recent Transactions</h3>
+<div class="flex flex-col gap-3">
+<!-- Transaction Item 1 -->
+<div class="flex items-center justify-between p-4 rounded-xl bg-surface-dark/50 hover:bg-surface-dark transition-colors">
+<div class="flex items-center gap-4">
+<div class="size-12 rounded-full bg-[#111] border border-white/5 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-red-400">movie</span>
+</div>
+<div>
+<p class="text-white font-bold text-base">Netflix</p>
+<p class="text-gray-500 text-xs font-medium mt-0.5">Subscription • Today</p>
+</div>
+</div>
+<p class="text-white font-bold text-base">-$15.00</p>
+</div>
+<!-- Transaction Item 2 -->
+<div class="flex items-center justify-between p-4 rounded-xl bg-surface-dark/50 hover:bg-surface-dark transition-colors">
+<div class="flex items-center gap-4">
+<div class="size-12 rounded-full bg-[#111] border border-white/5 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-orange-400">coffee</span>
+</div>
+<div>
+<p class="text-white font-bold text-base">Starbucks</p>
+<p class="text-gray-500 text-xs font-medium mt-0.5">Food &amp; Drink • Yesterday</p>
+</div>
+</div>
+<p class="text-white font-bold text-base">-$6.50</p>
+</div>
+<!-- Transaction Item 3 -->
+<div class="flex items-center justify-between p-4 rounded-xl bg-surface-dark/50 hover:bg-surface-dark transition-colors">
+<div class="flex items-center gap-4">
+<div class="size-12 rounded-full bg-[#111] border border-white/5 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary">attach_money</span>
+</div>
+<div>
+<p class="text-white font-bold text-base">Salary</p>
+<p class="text-gray-500 text-xs font-medium mt-0.5">Income • Aug 24</p>
+</div>
+</div>
+<p class="text-primary font-bold text-base">+$3,200.00</p>
+</div>
+<!-- Transaction Item 4 -->
+<div class="flex items-center justify-between p-4 rounded-xl bg-surface-dark/50 hover:bg-surface-dark transition-colors">
+<div class="flex items-center gap-4">
+<div class="size-12 rounded-full bg-[#111] border border-white/5 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-blue-400">local_gas_station</span>
+</div>
+<div>
+<p class="text-white font-bold text-base">Shell Station</p>
+<p class="text-gray-500 text-xs font-medium mt-0.5">Transport • Aug 22</p>
+</div>
+</div>
+<p class="text-white font-bold text-base">-$45.20</p>
+</div>
+</div>
+</div>
+<!-- Spacer for FAB/Nav -->
+<div class="h-24"></div>
+</main>
+<!-- Floating Action Button -->
+<div class="fixed bottom-24 right-5 z-20">
+<button class="size-14 rounded-full bg-primary text-background-dark shadow-lg shadow-primary/40 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined" style="font-size: 32px; font-weight: 600;">add</span>
+</button>
+</div>
+<!-- Bottom Navigation -->
+<nav class="fixed bottom-0 w-full bg-surface-dark border-t border-white/5 pb-6 pt-3 px-6 z-30">
+<ul class="flex justify-between items-center">
+<li>
+<button class="flex flex-col items-center gap-1 text-primary w-14">
+<span class="material-symbols-outlined filled" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="text-[10px] font-bold">Home</span>
+</button>
+</li>
+<li>
+<button class="flex flex-col items-center gap-1 text-gray-500 hover:text-white transition-colors w-14">
+<span class="material-symbols-outlined">bar_chart</span>
+<span class="text-[10px] font-medium">Stats</span>
+</button>
+</li>
+<li class="w-10"></li> <!-- Spacer for FAB visual balance if needed, but FAB is floating right -->
+<li>
+<button class="flex flex-col items-center gap-1 text-gray-500 hover:text-white transition-colors w-14">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="text-[10px] font-medium">Wallet</span>
+</button>
+</li>
+<li>
+<button class="flex flex-col items-center gap-1 text-gray-500 hover:text-white transition-colors w-14">
+<span class="material-symbols-outlined">person</span>
+<span class="text-[10px] font-medium">Profile</span>
+</button>
+</li>
+</ul>
+</nav>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script>
         let expenses = [];
